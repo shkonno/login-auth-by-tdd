@@ -47,7 +47,7 @@ class TestVerifyToken:
         """無効なトークンはエラーになる"""
         invalid_token = "invalid.token.here"
 
-        with pytest.raises(Exception):
+        with pytest.raises(jwt.InvalidTokenError):
             verify_token(invalid_token)
 
     def test_期限切れトークンで例外が発生する(self):

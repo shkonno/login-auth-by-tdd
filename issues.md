@@ -9,7 +9,7 @@
 | 3 | Next.jsスケルトン作成 | - | High | [x] |
 | 4 | pytest環境構築 | - | High | [x] |
 | 5 | パスワードハッシュ化機能 | `test_password.py` | High | [x] |
-| 6 | JWT生成・検証機能 | `test_jwt.py` | High | [ ] |
+| 6 | JWT生成・検証機能 | `test_jwt.py` | High | [x] |
 
 ---
 
