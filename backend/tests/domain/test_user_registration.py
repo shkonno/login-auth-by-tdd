@@ -70,13 +70,13 @@ def test_user_repository_interface_has_find_by_id_method():
     assert hasattr(UserRepository, 'find_by_id')
 
 
-# プロパティベースドテスト
+# プロパティベースドテスト  
 @given(st.emails())
 def test_user_with_any_valid_email_is_created(email):
     """有効なメールアドレスならUserを作成できる（プロパティベースド）"""
     user = User(email=email, hashed_password="valid_password")
-    # 生成されたメールアドレスが正しく設定されている
-    assert user.email == email
+    # メールアドレスは正規化（小文字化）されて保存される
+    assert user.email == email.lower()
 
 @given(st.text(min_size=1))
 def test_user_with_any_non_empty_password_is_created(password):
