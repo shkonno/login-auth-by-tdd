@@ -45,3 +45,10 @@ def test_create_user_with_empty_email_raises_error():
             email="",
             hashed_password="hashed_password_here"
         )
+
+
+def test_user_repository_interface_has_save_method():
+    """UserRepositoryインターフェースにsaveメソッドが定義されている"""
+    from app.domain.user_repository import UserRepository
+
+    assert hasattr(UserRepository, 'save')
