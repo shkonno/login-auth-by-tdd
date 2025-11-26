@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from app.domain.registration_service import RegistrationService
 from app.infrastructure.user_repository import SqlAlchemyUserRepository
@@ -8,6 +9,15 @@ app = FastAPI(
     title="Auth TDD Learning",
     description="JWT認証をTDDで学ぶプロジェクト",
     version="0.1.0"
+)
+
+# CORS設定
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # フロントエンドのURL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

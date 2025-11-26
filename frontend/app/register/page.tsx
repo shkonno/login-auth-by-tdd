@@ -36,6 +36,26 @@ export default function RegisterPage() {
         password
       })
     })
+      .then(async (response) => {
+        if (!response.ok) {
+          const data = await response.json()
+          if (response.status === 409) {
+            // 重複メールアドレスエラー
+            setEmailError('このメールアドレスは既に登録されています')
+          } else {
+            // その他のエラー
+            setEmailError(data.detail?.error || '登録に失敗しました')
+          }
+          return
+        }
+        const data = await response.json()
+        // 登録成功時の処理（TODO: 成功メッセージ表示やリダイレクト）
+        console.log('登録成功:', data)
+      })
+      .catch((error) => {
+        console.error('エラー:', error)
+        setEmailError('ネットワークエラーが発生しました')
+      })
   }
 
   return (

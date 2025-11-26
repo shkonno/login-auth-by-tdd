@@ -110,5 +110,36 @@ describe('RegisterPage', () => {
       )
     })
   })
+
+  it('重複メールアドレスで送信するとエラーメッセージが表示される', async () => {
+    const user = userEvent.setup()
+    // API 409エラーレスポンスをモック
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        detail: {
+          error: 'Email test@example.com is already registered'
+        }
+      })
+    })
+
+    render(<RegisterPage />)
+    
+    // 有効なデータを入力
+    const emailInput = screen.getByLabelText(/メールアドレス/i)
+    await user.type(emailInput, 'test@example.com')
+    const passwordInput = screen.getByLabelText(/パスワード/i)
+    await user.type(passwordInput, 'password123')
+    
+    // フォーム送信
+    const submitButton = screen.getByRole('button', { name: /登録/i })
+    await user.click(submitButton)
+    
+    // エラーメッセージが表示されることを確認
+    await waitFor(() => {
+      expect(screen.getByText(/このメールアドレスは既に登録されています/i)).toBeInTheDocument()
+    })
+  })
 })
 
