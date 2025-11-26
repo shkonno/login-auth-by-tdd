@@ -2,9 +2,10 @@ name: Backend CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/*]
   pull_request:
     branches: [main]
+  workflow_dispatch:  # 手動実行を許可
 
 jobs:
   test:
@@ -15,6 +16,12 @@ jobs:
         working-directory: backend
 
     steps:
+      - name: Debug info
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"
+
       - uses: actions/checkout@v4
 
       - name: Set up Python
