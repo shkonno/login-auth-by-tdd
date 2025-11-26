@@ -22,7 +22,7 @@
 | 9   | RegistrationService             | `test_user_registration.py`     | High   | [x]  |
 | 10  | SQLAlchemy UserRepository 実装  | `test_user_repository.py`       | High   | [x]  |
 | 11  | 登録 API エンドポイント         | `test_registration_endpoint.py` | High   | [x]  |
-| 12  | 登録フォーム UI（Next.js）      | E2E テスト（任意）              | Medium | [ ]  |
+| 12  | 登録フォーム UI（Next.js）      | E2E テスト（任意）              | Medium | [x]  |
 | 12a | 品質保証観点でのテスト          | 全テスト（任意）                | Medium | [ ]  |
 
 ---
