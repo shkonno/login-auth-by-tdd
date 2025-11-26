@@ -56,14 +56,14 @@ describe('RegisterPage', () => {
     const emailInput = screen.getByLabelText(/メールアドレス/i)
     await user.type(emailInput, 'test@example.com')
     const passwordInput = screen.getByLabelText(/パスワード/i)
-    await user.type(passwordInput, '12') // 2文字（短い）
+    await user.type(passwordInput, 'pass123') // 7文字（8文字未満）
     
     // フォーム送信
     const submitButton = screen.getByRole('button', { name: /登録/i })
     await user.click(submitButton)
     
-    // エラーメッセージが表示されることを確認
-    expect(screen.getByText(/パスワードは3文字以上で入力してください/i)).toBeInTheDocument()
+    // エラーメッセージが表示されることを確認（業界標準の8文字以上）
+    expect(screen.getByText(/パスワードは8文字以上で入力してください/i)).toBeInTheDocument()
   })
 })
 

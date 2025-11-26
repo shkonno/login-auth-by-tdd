@@ -17,8 +17,8 @@ export default function RegisterPage() {
       return
     }
     
-    if (!password || password.length < 3) {
-      setPasswordError('パスワードは3文字以上で入力してください')
+    if (!password || password.length < 8) {
+      setPasswordError('パスワードは8文字以上で入力してください')
       return
     }
     
