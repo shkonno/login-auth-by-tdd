@@ -24,7 +24,18 @@ export default function RegisterPage() {
     
     setEmailError('')
     setPasswordError('')
-    // TODO: API呼び出し
+    
+    // API呼び出し
+    fetch('http://localhost:8000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    })
   }
 
   return (

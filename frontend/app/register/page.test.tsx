@@ -6,9 +6,12 @@
  * 3. Refactor: コードをきれいにする
  */
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import RegisterPage from './page'
+
+// fetchをモック
+global.fetch = jest.fn()
 
 describe('RegisterPage', () => {
   it('登録フォームページが表示される', () => {
@@ -64,6 +67,48 @@ describe('RegisterPage', () => {
     
     // エラーメッセージが表示されることを確認（業界標準の8文字以上）
     expect(screen.getByText(/パスワードは8文字以上で入力してください/i)).toBeInTheDocument()
+  })
+
+  it('有効なデータで送信するとAPIが呼ばれる', async () => {
+    const user = userEvent.setup()
+    // API成功レスポンスをモック
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: '123',
+        email: 'test@example.com'
+      })
+    })
+
+    render(<RegisterPage />)
+    
+    // 有効なデータを入力
+    const emailInput = screen.getByLabelText(/メールアドレス/i)
+    await user.type(emailInput, 'test@example.com')
+    const passwordInput = screen.getByLabelText(/パスワード/i)
+    await user.type(passwordInput, 'password123')
+    
+    // フォーム送信
+    const submitButton = screen.getByRole('button', { name: /登録/i })
+    await user.click(submitButton)
+    
+    // APIが呼ばれることを確認
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/register',
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            password: 'password123'
+          })
+        })
+      )
+    })
   })
 })
 
