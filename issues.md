@@ -50,7 +50,7 @@
 | 22  | Google OAuth 設定         | -                          | Medium | [x]  |
 | 23  | GoogleOAuthService        | `test_oauth.py`            | High   | [x]  |
 | 24  | OAuth コールバック API    | `test_oauth_callback.py`   | High   | [x]  |
-| 25  | Google ログインボタン追加 | E2E テスト（任意）         | Medium | [ ]  |
+| 25  | Google ログインボタン追加 | E2E テスト（任意）         | Medium | [x]  |
 
 ---
 
