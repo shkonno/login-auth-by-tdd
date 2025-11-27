@@ -27,42 +27,43 @@
 
 ---
 
-## Week 3: ログイン + セッション管理のTDD
+## Week 3: ログイン + セッション管理の TDD
 
-| # | イシュー | TDDテスト対象 | 優先度 | 状態 |
-|---|----------|--------------|--------|------|
-| 13 | LoginService実装 | `test_login.py` | High | [ ] |
-| 14 | 認証エラーハンドリング | `test_login.py` | High | [ ] |
-| 15 | Redisセッションストア | `test_session.py` | High | [ ] |
-| 16 | ログインAPIエンドポイント | `test_login_endpoint.py` | High | [ ] |
-| 17 | ログインフォームUI | E2Eテスト（任意） | Medium | [ ] |
-| 18 | 保護されたルート（/users/me） | `test_protected_route.py` | High | [ ] |
-| 19 | ダッシュボードUI | E2Eテスト（任意） | Medium | [ ] |
+| #   | イシュー                      | TDD テスト対象            | 優先度 | 状態 |
+| --- | ----------------------------- | ------------------------- | ------ | ---- |
+| 13  | LoginService 実装             | `test_login.py`           | High   | [x]  |
+| 14  | 認証エラーハンドリング        | `test_login.py`           | High   | [x]  |
+| 15  | Redis セッションストア        | `test_session.py`         | High   | [x]  |
+| 16  | ログイン API エンドポイント   | `test_login_endpoint.py`  | High   | [x]  |
+| 17  | ログインフォーム UI           | E2E テスト（任意）        | Medium | [x]  |
+| 18  | 保護されたルート（/users/me） | `test_protected_route.py` | High   | [x]  |
+| 19  | ダッシュボード UI             | E2E テスト（任意）        | Medium | [x]  |
 
 ---
 
 ## Week 4: トークンリフレッシュ + OAuth
 
-| # | イシュー | TDDテスト対象 | 優先度 | 状態 |
-|---|----------|--------------|--------|------|
-| 20 | リフレッシュトークン生成 | `test_refresh_token.py` | High | [ ] |
-| 21 | アクセストークン更新API | `test_refresh_endpoint.py` | High | [ ] |
-| 22 | Google OAuth設定 | - | Medium | [ ] |
-| 23 | GoogleOAuthService | `test_oauth.py` | High | [ ] |
-| 24 | OAuthコールバックAPI | `test_oauth_callback.py` | High | [ ] |
-| 25 | Googleログインボタン追加 | E2Eテスト（任意） | Medium | [ ] |
+| #   | イシュー                  | TDD テスト対象             | 優先度 | 状態 |
+| --- | ------------------------- | -------------------------- | ------ | ---- |
+| 20  | リフレッシュトークン生成  | `test_refresh_token.py`    | High   | [x]  |
+| 21  | アクセストークン更新 API  | `test_refresh_endpoint.py` | High   | [ ]  |
+| 22  | Google OAuth 設定         | -                          | Medium | [ ]  |
+| 23  | GoogleOAuthService        | `test_oauth.py`            | High   | [ ]  |
+| 24  | OAuth コールバック API    | `test_oauth_callback.py`   | High   | [ ]  |
+| 25  | Google ログインボタン追加 | E2E テスト（任意）         | Medium | [ ]  |
 
 ---
 
 ## 横断的イシュー
 
-| # | イシュー | 備考 | 状態 |
-|---|----------|------|------|
-| 26 | .gitignore作成 | Python + Node.js用 | [x] |
-| 27 | CI/CD設定（GitHub Actions） | テスト自動実行 | [x] |
-| 28 | エラーハンドリング共通化 | カスタム例外クラス | [ ] |
-| 29 | API仕様書（OpenAPI） | FastAPI自動生成 | [ ] |
-| 30 | SECRET_KEY等を環境変数化 | JWT設定を.envから読み込み | [ ] |
+| #   | イシュー                     | 備考                        | 状態 |
+| --- | ---------------------------- | --------------------------- | ---- |
+| 26  | .gitignore 作成              | Python + Node.js 用         | [x]  |
+| 27  | CI/CD 設定（GitHub Actions） | テスト自動実行              | [x]  |
+| 28  | エラーハンドリング共通化     | カスタム例外クラス          | [ ]  |
+| 29  | API 仕様書（OpenAPI）        | FastAPI 自動生成            | [ ]  |
+| 30  | SECRET_KEY 等を環境変数化    | JWT 設定を.env から読み込み | [ ]  |
+| 31  | Logger                      |影響大きい | [ ]  |
 
 ---
 
