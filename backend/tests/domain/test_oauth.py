@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from app.domain.user import User
 from app.domain.user_repository import UserRepository
 from app.domain.oauth_service import GoogleOAuthService
+from app.domain.exceptions import ValidationError
 
 
 class InMemoryUserRepository(UserRepository):
@@ -90,7 +91,7 @@ def test_Googleユーザー情報にemailが欠けている場合にエラーが
     }
     
     # Act & Assert
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValidationError) as exc_info:
         service.authenticate(google_user_info)
     
     assert "email" in str(exc_info.value).lower()
@@ -126,6 +127,6 @@ def test_Googleユーザー情報が空の場合にエラーが発生する():
     google_user_info = {}
     
     # Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         service.authenticate(google_user_info)
 

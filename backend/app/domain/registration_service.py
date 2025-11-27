@@ -20,6 +20,7 @@ from typing import Callable
 
 from app.domain.password import hash_password
 from app.domain.user import User
+from app.domain.exceptions import BusinessError
 
 
 class RegistrationService:
@@ -83,10 +84,10 @@ class RegistrationService:
         # 「早く失敗する」のがプログラミングの原則。
         existing = self._repository.find_by_email(email)
         if existing:
-            # 【なぜValueError？】
-            # 「入力値が不正」というエラー。
-            # ユーザーが悪いので、修正を促せます。
-            raise ValueError(f"Email {email} is already registered")
+            # 【なぜBusinessError？】
+            # 「ビジネスルール違反」というエラー。
+            # 既に登録済みのメールアドレスで登録しようとした場合。
+            raise BusinessError(f"Email {email} is already registered")
 
         # ステップ2: パスワード暗号化
         # 【なぜここで暗号化？】

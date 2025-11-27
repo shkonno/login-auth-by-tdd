@@ -1,11 +1,14 @@
 """JWT生成・検証機能"""
 
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
 
-SECRET_KEY = "your-secret-key-here"
+# JWT設定
+# 環境変数から読み込む（本番環境では.envファイルから）
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 DEFAULT_EXPIRE_MINUTES = 15
 DEFAULT_REFRESH_EXPIRE_DAYS = 7

@@ -13,6 +13,7 @@ Google OAuth認証のビジネスロジックを担当します。
 
 from app.domain.user import User
 from app.domain.user_repository import UserRepository
+from app.domain.exceptions import ValidationError
 
 
 class GoogleOAuthService:
@@ -81,7 +82,7 @@ class GoogleOAuthService:
         # ステップ1: emailの取得と検証
         email = google_user_info.get("email")
         if not email:
-            raise ValueError("Email is required in google_user_info")
+            raise ValidationError("Email is required in google_user_info")
 
         # ステップ2: 既存ユーザーを検索
         existing_user = self._repository.find_by_email(email)
