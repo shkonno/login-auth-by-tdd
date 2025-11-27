@@ -48,7 +48,7 @@
 | 20  | リフレッシュトークン生成  | `test_refresh_token.py`    | High   | [x]  |
 | 21  | アクセストークン更新 API  | `test_refresh_endpoint.py` | High   | [x]  |
 | 22  | Google OAuth 設定         | -                          | Medium | [x]  |
-| 23  | GoogleOAuthService        | `test_oauth.py`            | High   | [ ]  |
+| 23  | GoogleOAuthService        | `test_oauth.py`            | High   | [x]  |
 | 24  | OAuth コールバック API    | `test_oauth_callback.py`   | High   | [ ]  |
 | 25  | Google ログインボタン追加 | E2E テスト（任意）         | Medium | [ ]  |
 
