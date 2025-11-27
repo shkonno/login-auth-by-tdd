@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import httpx
-
-from app.domain.jwt import verify_token, create_access_token, create_refresh_token
-from app.domain import oauth_config
-from app.domain.oauth_service import GoogleOAuthService
-from app.domain.user_repository import UserRepository
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from uuid import UUID
+from app.domain.registration_service import RegistrationService
+from app.domain.login_service import LoginService
+from app.domain.jwt import verify_token
+from app.infrastructure.user_repository import SqlAlchemyUserRepository
+from app.infrastructure.database import SessionLocal
 
 app = FastAPI(
     title="Auth TDD Learning",
@@ -14,7 +15,7 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS設定を追加
+# CORS設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # フロントエンドのURL
@@ -22,6 +23,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class UserRegistrationRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserRegistrationResponse(BaseModel):
+    id: str
+    email: str
+
+
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+
+
+class CurrentUserResponse(BaseModel):
+    id: str
+    email: str
 
 
 @app.get("/")
@@ -34,143 +59,107 @@ def health_check():
     return {"status": "healthy"}
 
 
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+@app.post("/api/register", status_code=201, response_model=UserRegistrationResponse)
+def register_user(request: UserRegistrationRequest):
+    # パスワードの長さをチェック
+    if len(request.password) < 8:
+        raise HTTPException(status_code=400, detail={"error": "Password must be at least 8 characters long"})
 
-
-@app.post("/auth/refresh")
-def refresh_access_token(request: RefreshTokenRequest):
-    """リフレッシュトークンを使って新しいアクセストークンを取得する"""
     try:
-        # リフレッシュトークンを検証
-        payload = verify_token(request.refresh_token)
-        
-        # type: "refresh" であることを確認
-        if payload.get("type") != "refresh":
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token type. Refresh token required."
+        # データベースセッション作成
+        db = SessionLocal()
+        try:
+            repository = SqlAlchemyUserRepository(db)
+            service = RegistrationService(repository)
+
+            # ユーザー登録
+            user = service.register(request.email, request.password)
+
+            return UserRegistrationResponse(
+                id=str(user.id),
+                email=user.email
             )
-        
-        # 新しいアクセストークンを生成
+        finally:
+            db.close()
+
+    except ValueError as e:
+        # 重複メールアドレスエラー
+        raise HTTPException(status_code=409, detail={"error": str(e)})
+    except Exception as e:
+        # その他のエラー
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+
+
+@app.post("/api/login", status_code=200, response_model=UserLoginResponse)
+def login_user(request: UserLoginRequest):
+    try:
+        # データベースセッション作成
+        db = SessionLocal()
+        try:
+            repository = SqlAlchemyUserRepository(db)
+            service = LoginService(repository)
+
+            # ログイン処理
+            token = service.login(request.email, request.password)
+
+            return UserLoginResponse(
+                access_token=token
+            )
+        finally:
+            db.close()
+
+    except ValueError as e:
+        # 認証エラー（メールアドレスまたはパスワードが間違っている）
+        raise HTTPException(status_code=401, detail={"error": "Invalid email or password"})
+    except Exception as e:
+        # その他のエラー
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+
+
+def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
+    """Authorizationヘッダーからトークンを取得して検証し、ユーザーIDを返す"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail={"error": "Authorization header is missing"})
+    
+    # "Bearer {token}" の形式からトークンを抽出
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail={"error": "Invalid authorization header format"})
+    
+    token = parts[1]
+    
+    try:
+        # トークンを検証
+        payload = verify_token(token)
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token payload."
-            )
-        
-        new_access_token = create_access_token({"sub": user_id})
-        
-        return {"access_token": new_access_token}
-    
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        # 期限切れや無効なトークンの場合
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired refresh token"
-        )
+            raise HTTPException(status_code=401, detail={"error": "Invalid token payload"})
+        return user_id
+    except Exception:
+        raise HTTPException(status_code=401, detail={"error": "Invalid or expired token"})
 
 
-# リポジトリのインスタンス（簡易実装、実際のアプリケーションでは依存性注入を使用）
-# テストでモック化可能にするため、グローバル変数として保持
-_repository: UserRepository = None
-
-
-def get_repository() -> UserRepository:
-    """リポジトリを取得する（テスト用にモック可能にするため）"""
-    global _repository
-    if _repository is None:
-        # 実際のアプリケーションでは、データベースセッションからリポジトリを作成
-        # テストではモック化される
-        # ここでは簡易実装として、空のリポジトリを作成
-        # 実際のアプリケーションでは、依存性注入を使用すべき
-        raise NotImplementedError("Repository must be set before use")
-    return _repository
-
-
-@app.get("/auth/google/callback")
-def google_oauth_callback(code: str = Query(None)):
-    """Google OAuth認証コールバックエンドポイント
-    
-    【処理の流れ】
-    1. 認証コードを受け取る
-    2. Google APIで認証コードをアクセストークンに交換
-    3. アクセストークンでユーザー情報を取得
-    4. GoogleOAuthServiceでユーザーを作成/取得
-    5. JWTトークン（アクセストークン + リフレッシュトークン）を返す
-    """
+@app.get("/api/users/me", response_model=CurrentUserResponse)
+def get_current_user(user_id: str = Depends(get_current_user_id)):
+    """現在ログインしているユーザーの情報を取得"""
     try:
-        # 認証コードの検証
-        if not code:
-            raise HTTPException(
-                status_code=400,
-                detail="Authorization code is required"
+        # データベースセッション作成
+        db = SessionLocal()
+        try:
+            repository = SqlAlchemyUserRepository(db)
+            
+            # ユーザーIDでユーザーを検索
+            user = repository.find_by_id(UUID(user_id))
+            if not user:
+                raise HTTPException(status_code=404, detail={"error": "User not found"})
+            
+            return CurrentUserResponse(
+                id=str(user.id),
+                email=user.email
             )
-        
-        # Google API設定の確認
-        if not oauth_config.GOOGLE_CLIENT_ID or not oauth_config.GOOGLE_CLIENT_SECRET:
-            raise HTTPException(
-                status_code=500,
-                detail="Google OAuth is not configured"
-            )
-        
-        # ステップ1: 認証コードをアクセストークンに交換
-        token_data = {
-            "code": code,
-            "client_id": oauth_config.GOOGLE_CLIENT_ID,
-            "client_secret": oauth_config.GOOGLE_CLIENT_SECRET,
-            "redirect_uri": oauth_config.GOOGLE_REDIRECT_URI,
-            "grant_type": "authorization_code"
-        }
-        
-        token_response = httpx.post(oauth_config.GOOGLE_TOKEN_URL, data=token_data)
-        if token_response.status_code != 200:
-            raise HTTPException(
-                status_code=401,
-                detail="Failed to exchange authorization code for access token"
-            )
-        
-        token_json = token_response.json()
-        google_access_token = token_json.get("access_token")
-        if not google_access_token:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token response from Google"
-            )
-        
-        # ステップ2: アクセストークンでユーザー情報を取得
-        headers = {"Authorization": f"Bearer {google_access_token}"}
-        userinfo_response = httpx.get(oauth_config.GOOGLE_USERINFO_URL, headers=headers)
-        if userinfo_response.status_code != 200:
-            raise HTTPException(
-                status_code=401,
-                detail="Failed to get user information from Google"
-            )
-        
-        google_user_info = userinfo_response.json()
-        
-        # ステップ3: GoogleOAuthServiceでユーザーを作成/取得
-        repository = get_repository()
-        oauth_service = GoogleOAuthService(repository)
-        user = oauth_service.authenticate(google_user_info)
-        
-        # ステップ4: JWTトークンを生成
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-        
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        }
-    
+        finally:
+            db.close()
     except HTTPException:
         raise
     except Exception as e:
-        # 予期しないエラーの場合
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail={"error": str(e)})

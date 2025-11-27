@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -17,16 +18,17 @@ export default function LoginPage() {
       return
     }
     
-    if (!password || password.trim() === '') {
-      setPasswordError('パスワードは必須です')
+    if (!password || password.length < 8) {
+      setPasswordError('パスワードは8文字以上で入力してください')
       return
     }
     
     setEmailError('')
     setPasswordError('')
+    setSuccessMessage('')
     
     // API呼び出し
-    fetch('http://localhost:8000/api/login', {
+    fetch('http://localhost:8000/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -39,31 +41,33 @@ export default function LoginPage() {
       .then(async (response) => {
         if (!response.ok) {
           const data = await response.json()
-          if (response.status === 401) {
-            // 認証エラー
-            setEmailError('メールアドレスまたはパスワードが正しくありません')
-            setPasswordError('')
+          if (response.status === 409) {
+            // 重複メールアドレスエラー
+            setEmailError('このメールアドレスは既に登録されています')
           } else {
             // その他のエラー
-            setEmailError('ログインに失敗しました')
-            setPasswordError('')
+            setEmailError(data.detail?.error || '登録に失敗しました')
           }
           return
         }
         const data = await response.json()
-        // トークンをlocalStorageに保存
-        if (data.access_token) {
-          localStorage.setItem('access_token', data.access_token)
+        // 登録成功時の処理
+        setSuccessMessage('登録が完了しました')
+        // フォームをリセット
+        const form = e.currentTarget
+        if (form) {
+          form.reset()
         }
       })
       .catch((error) => {
         console.error('エラー:', error)
+        setEmailError('ネットワークエラーが発生しました')
       })
   }
 
   return (
     <div>
-      <h1>ログイン</h1>
+      <h1>ユーザー登録</h1>
       <form onSubmit={handleSubmit}>
         <label htmlFor="email">メールアドレス</label>
         <input type="email" id="email" name="email" />
@@ -71,7 +75,8 @@ export default function LoginPage() {
         <label htmlFor="password">パスワード</label>
         <input type="password" id="password" name="password" />
         {passwordError && <div>{passwordError}</div>}
-        <button type="submit">ログイン</button>
+        {successMessage && <div>{successMessage}</div>}
+        <button type="submit">登録</button>
       </form>
     </div>
   )

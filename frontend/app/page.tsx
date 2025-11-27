@@ -7,6 +7,7 @@ export default function Home() {
         <ul>
           <li><a href="/register">ユーザー登録</a></li>
           <li><a href="/login">ログイン</a></li>
+          <li><a href="/dashboard">ダッシュボード</a></li>
         </ul>
       </nav>
     </main>
