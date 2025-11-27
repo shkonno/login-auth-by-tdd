@@ -255,3 +255,37 @@ def google_oauth_callback(code: Optional[str] = Query(None)):
     except Exception as e:
         # Google API呼び出し失敗などの予期しないエラー
         raise HTTPException(status_code=500, detail={"error": str(e)})
+
+
+@app.post("/auth/refresh", response_model=RefreshTokenResponse)
+def refresh_access_token(request: RefreshTokenRequest):
+    """リフレッシュトークンでアクセストークンを更新するエンドポイント
+    
+    有効なリフレッシュトークンを受け取り、新しいアクセストークンを返す。
+    """
+    refresh_token = request.refresh_token
+    
+    try:
+        # ステップ1: リフレッシュトークンを検証
+        payload = verify_token(refresh_token)
+        
+        # ステップ2: トークンのtypeが"refresh"であることを確認
+        token_type = payload.get("type")
+        if token_type != "refresh":
+            raise HTTPException(status_code=401, detail={"error": "Invalid token type. Refresh token required."})
+        
+        # ステップ3: ユーザーIDを取得
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail={"error": "Invalid token payload"})
+        
+        # ステップ4: 新しいアクセストークンを生成
+        access_token = create_access_token({"sub": user_id})
+        
+        return RefreshTokenResponse(access_token=access_token)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        # トークン検証エラー（期限切れ、無効なトークンなど）
+        raise HTTPException(status_code=401, detail={"error": "Invalid or expired refresh token"})
