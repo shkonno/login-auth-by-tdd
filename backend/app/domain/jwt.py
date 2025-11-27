@@ -8,6 +8,7 @@ import jwt
 SECRET_KEY = "your-secret-key-here"
 ALGORITHM = "HS256"
 DEFAULT_EXPIRE_MINUTES = 15
+DEFAULT_REFRESH_EXPIRE_DAYS = 7
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """アクセストークンを生成する"""
@@ -16,6 +17,18 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expires_delta = timedelta(minutes=DEFAULT_EXPIRE_MINUTES)
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """リフレッシュトークンを生成する"""
+    to_encode = data.copy()
+    to_encode.update({"type": "refresh"})
+    if expires_delta is None:
+        expires_delta = timedelta(days=DEFAULT_REFRESH_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + expires_delta
+    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
