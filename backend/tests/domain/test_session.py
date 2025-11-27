@@ -2,6 +2,7 @@
 
 import pytest
 import redis
+from hypothesis import given, strategies as st
 from typing import Optional
 from app.domain.session_store import SessionStore
 from app.infrastructure.session_store import RedisSessionStore
@@ -165,6 +166,47 @@ def test_redis_session_with_ttl(redis_session_store, redis_client):
     
     # セッションが取得できることを確認
     retrieved_data = redis_session_store.get(session_id)
+    assert retrieved_data is not None
+    assert retrieved_data == session_data
+
+
+@given(
+    session_id=st.text(min_size=1, max_size=100),
+    user_id=st.text(min_size=1, max_size=100),
+    email=st.emails()
+)
+def test_save_and_get_session_with_various_data(session_id: str, user_id: str, email: str):
+    """様々なセッションIDとデータでセッションを保存・取得できる（PBT）"""
+    # Arrange
+    store = InMemorySessionStore()
+    session_data = {"user_id": user_id, "email": email}
+
+    # Act
+    store.save(session_id, session_data)
+    retrieved_data = store.get(session_id)
+
+    # Assert
+    assert retrieved_data is not None
+    assert retrieved_data == session_data
+    assert retrieved_data["user_id"] == user_id
+    assert retrieved_data["email"] == email
+
+
+@given(
+    session_id=st.text(min_size=1, max_size=100),
+    ttl=st.integers(min_value=1, max_value=3600)
+)
+def test_session_ttl_with_various_values(session_id: str, ttl: int):
+    """様々なTTL値でセッションを保存できる（PBT）"""
+    # Arrange
+    store = InMemorySessionStore()
+    session_data = {"user_id": "user-123"}
+
+    # Act
+    store.save(session_id, session_data, ttl=ttl)
+    retrieved_data = store.get(session_id)
+
+    # Assert
     assert retrieved_data is not None
     assert retrieved_data == session_data
 
