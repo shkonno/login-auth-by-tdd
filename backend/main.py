@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from app.domain.registration_service import RegistrationService
+from app.domain.login_service import LoginService
 from app.infrastructure.user_repository import SqlAlchemyUserRepository
 from app.infrastructure.database import SessionLocal
 
@@ -29,6 +30,15 @@ class UserRegistrationRequest(BaseModel):
 class UserRegistrationResponse(BaseModel):
     id: str
     email: str
+
+
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLoginResponse(BaseModel):
+    access_token: str
 
 
 @app.get("/")
@@ -67,6 +77,32 @@ def register_user(request: UserRegistrationRequest):
     except ValueError as e:
         # 重複メールアドレスエラー
         raise HTTPException(status_code=409, detail={"error": str(e)})
+    except Exception as e:
+        # その他のエラー
+        raise HTTPException(status_code=400, detail={"error": str(e)})
+
+
+@app.post("/api/login", status_code=200, response_model=UserLoginResponse)
+def login_user(request: UserLoginRequest):
+    try:
+        # データベースセッション作成
+        db = SessionLocal()
+        try:
+            repository = SqlAlchemyUserRepository(db)
+            service = LoginService(repository)
+
+            # ログイン処理
+            token = service.login(request.email, request.password)
+
+            return UserLoginResponse(
+                access_token=token
+            )
+        finally:
+            db.close()
+
+    except ValueError as e:
+        # 認証エラー（メールアドレスまたはパスワードが間違っている）
+        raise HTTPException(status_code=401, detail={"error": "Invalid email or password"})
     except Exception as e:
         # その他のエラー
         raise HTTPException(status_code=400, detail={"error": str(e)})
