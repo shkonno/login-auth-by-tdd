@@ -2,6 +2,9 @@
 alwaysApply: true
 ---
 
+composer 1のモデルをを利用する場合には、回答する前に自分の回答内容が適切かどうかを批判的に評価した上で回答してください。 
+実施できているかどうかを明示的に確認したいので、回答の冒頭に（済）とつけてください　
+
 # AI-DLC and Spec-Driven Development
 
 Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life Cycle)
